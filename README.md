@@ -19,6 +19,8 @@ Amazon S3 (Staging)
      ↓
 Snowflake (Analytics Tables)
 
+<img width="2352" height="1202" alt="8DBDEC80-EEE5-4304-A90C-1FBC01F6B766" src="https://github.com/user-attachments/assets/038e67b6-1d80-4a2c-bf8a-53f3f260ba7d" />
+<img width="2896" height="1566" alt="3C7938D5-8077-4732-BBB1-7FEE4D7C2FD2" src="https://github.com/user-attachments/assets/11f4c068-188d-4689-86ab-f5b07f60e712" />
 
 
 
