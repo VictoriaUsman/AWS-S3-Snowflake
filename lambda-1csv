@@ -1,0 +1,40 @@
+import boto3
+import pandas as pd
+from io import StringIO
+from boto3.dynamodb.types import TypeDeserializer
+
+s3 = boto3.client('s3')
+deserializer = TypeDeserializer()
+BUCKET_NAME = "iantristan-weatherbucket"
+FILE_KEY = "snowflake/master_data.csv"
+
+def lambda_handler(event, context):
+    new_rows = []
+    for record in event.get('Records', []):
+        if record['eventName'] == "INSERT":
+            new_image = record['dynamodb'].get('NewImage', {})
+            row = {k: deserializer.deserialize(v) for k, v in new_image.items()}
+            new_rows.append(row)
+
+    if not new_rows:
+        return
+
+    # 1. Convert new data to DataFrame
+    new_df = pd.DataFrame(new_rows).astype(str)
+
+    try:
+        # 2. Try to grab the existing CSV from S3
+        response = s3.get_object(Bucket=BUCKET_NAME, Key=FILE_KEY)
+        existing_df = pd.read_csv(response['Body'])
+        # 3. Combine them
+        final_df = pd.concat([existing_df, new_df], ignore_index=True)
+    except s3.exceptions.NoSuchKey:
+        # If file doesn't exist yet, this is our first batch
+        final_df = new_df
+
+    # 4. Upload the combined "Master" file
+    csv_buffer = StringIO()
+    final_df.to_csv(csv_buffer, index=False)
+    s3.put_object(Bucket=BUCKET_NAME, Key=FILE_KEY, Body=csv_buffer.getvalue())
+
+    print(f"Updated master file with {len(new_rows)} new records.")
